@@ -1,5 +1,8 @@
 import puppeteer from 'puppeteer';
 (async () => {
+    const address = 'Kasmanda regent apartment'
+    const product = "amul%20fullcream"
+
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
@@ -16,7 +19,7 @@ import puppeteer from 'puppeteer';
 
   // Wait for the location input, type the location
   await page.waitForSelector('input[name="select-locality"]');
-  await page.type('input[name="select-locality"]', 'Kasmanda regent apartment', { delay: 300 });
+  await page.type('input[name="select-locality"]', address, { delay: 300 });
 
   // Select the first location suggestion
   await page.waitForSelector('.LocationSearchList__LocationListContainer-sc-93rfr7-0');
@@ -28,14 +31,15 @@ import puppeteer from 'puppeteer';
   const newTab = await browser.newPage();
 
   // Set the address with the search query
-  await newTab.goto('https://blinkit.com/s/?q=amul%20fullcream', { waitUntil: 'networkidle2' });
+  await newTab.goto('https://blinkit.com/s/?q='+product, { waitUntil: 'networkidle2' });
   
   // Wait for the animated search suggestions to appear
-//   await newTab.waitForSelector('.SearchBar__AnimationWrapper-sc-16lps2d-1');
+  //   await newTab.waitForSelector('.SearchBar__AnimationWrapper-sc-16lps2d-1');
   
   // Wait for the search results to load
-//   await newTab.waitForSelector('[data-pf="reset"]'); // Waiting for product containers to load
- await page.waitForTimeout(3000);
+  //   await newTab.waitForSelector('[data-pf="reset"]'); // Waiting for product containers to load
+  await page.waitForTimeout(3000);
+  
   // Extract product details
   // Extract the entire HTML of the search results section
   const entireHTML = await newTab.evaluate(() => {
@@ -43,7 +47,7 @@ import puppeteer from 'puppeteer';
     return resultContainer ? resultContainer.outerHTML : '';
   });
 
-  console.log(entireHTML);
+//   console.log(entireHTML);
 
   // Open a new page to render the whole HTML content
   const resultTab = await browser.newPage();
@@ -54,6 +58,7 @@ import puppeteer from 'puppeteer';
   // Wait a few seconds to view the rendered page
   await resultTab.waitForTimeout(5000);
 
+  // issue with prices showing up in white in html
   
 //  await browser.close();
 })();

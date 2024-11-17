@@ -4,6 +4,9 @@ import puppeteer from 'puppeteer';
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
+  const address ="Kasmanda Regent Apartments";
+  const product ="'amul fullcream'";
+
   // Navigate to the ZeptoNow website
   await page.goto('https://www.zeptonow.com', { waitUntil: 'networkidle2' });
 
@@ -13,13 +16,13 @@ import puppeteer from 'puppeteer';
   console.log('Button clicked!');
 
   // Wait and type in the search input
-  await page.waitForTimeout(5000);
+//   await page.waitForTimeout(5000);
   await page.waitForSelector('input[placeholder="Search a new address"]');
-  await page.type('input[placeholder="Search a new address"]', 'Kasmanda Regent Apartments, Park Rd, Tarikhana, Narhi, Hazratganj', { delay: 100 });
+  await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
   console.log('Typed into the input field!');
 
   // Wait for the results to load and click the matching result
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(2000);
   await page.waitForSelector('h4.font-heading.line-clamp-1');
   await page.evaluate(() => {
     const target = Array.from(document.querySelectorAll('h4.font-heading.line-clamp-1'))
@@ -29,13 +32,13 @@ import puppeteer from 'puppeteer';
   console.log('Clicked on "Kasmanda Regent Apartments"!');
 
   // Wait for the "Confirm & Continue" button and click it
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(2000);
 await page.waitForSelector('button[data-testid="location-confirm-btn"]');
 await page.click('button[data-testid="location-confirm-btn"'); 
 console.log('Clicked on "Confirm & Continue"!');
 
   // Optionally wait or perform additional actions
-  await page.waitForTimeout(3000);
+  await page.waitForTimeout(000);
 
 
  // Wait for the search bar and click it
@@ -63,7 +66,7 @@ await Promise.all([
     await searchComponent.click();
   
     // Type "amul fullcream" into the search box
-    await searchComponent.type('amul fullcream', { delay: 100 });
+    await searchComponent.type(product, { delay: 100 });
   
     // Simulate pressing Enter to submit the search
     await page.keyboard.press('Enter');
