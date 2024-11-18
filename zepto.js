@@ -51,10 +51,10 @@ export const scrapeZepto = async (address, product) => {
     const products = Array.from(document.querySelectorAll('a[data-testid="product-card"]'));
     return products.map(product => {
       const title = product.querySelector('h5.font-subtitle').textContent.trim();
-      const image = product.querySelector('img[data-testid="product-card-image"]').src;
+      const pic = product.querySelector('img[data-testid="product-card-image"]').src;
       const quantity = product.querySelector('h4.font-heading').textContent.trim();
       const price = product.querySelector('h4[data-testid="product-card-price"]')?.textContent.trim();
-      return { title, image, quantity, price };
+      return { title, quantity, price, pic };
     });
   });
 
@@ -66,7 +66,7 @@ export const scrapeZepto = async (address, product) => {
 };
 
 // // Running the function to view results
-(async () => {
-  const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
-  console.log('Result:', result);
-})();
+// (async () => {
+//   const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
+//   console.log('Result:', result);
+// })();

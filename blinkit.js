@@ -41,7 +41,7 @@ export const scrapeBlinkit = async (address, product) => {
   const productDetails = await newTab.evaluate(() => {
     const products = Array.from(document.querySelectorAll('div[role="button"][id]'));
     return products.map(product => ({
-      name: product.querySelector('div.tw-text-300.tw-font-semibold')?.textContent.trim(),
+      title: product.querySelector('div.tw-text-300.tw-font-semibold')?.textContent.trim(),
       quantity: product.querySelector('div.tw-text-200.tw-font-medium')?.textContent.trim(),
       price: product.querySelector('div.tw-text-200.tw-font-semibold')?.textContent.trim(),
       pic: product.querySelector('img.tw-h-full.tw-w-full')?.src,
