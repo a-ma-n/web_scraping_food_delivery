@@ -1,8 +1,14 @@
 import puppeteer from 'puppeteer';
 
-const scrapeBlinkit = async (address, product) => {
-  const browser = await puppeteer.launch({ headless: false });
+const browser = await puppeteer.launch({ headless: false });
+//   const page = await browser.newPage();
+
+export const scrapeBlinkit = async (address, product) => {
+//   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
+
+  // URL encode the product name
+  product = encodeURIComponent(product);
 
   // Navigate to Blinkit's website
   await page.goto('https://www.blinkit.com', { waitUntil: 'networkidle2' });
@@ -51,6 +57,3 @@ const scrapeBlinkit = async (address, product) => {
   // Optional: Close the browser after reviewing
   // await browser.close();
 };
-
-// Example usage
-scrapeBlinkit('Kasmanda regent apartment', 'amul%20fullcream');
