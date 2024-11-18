@@ -1,8 +1,6 @@
 import puppeteer from 'puppeteer';
-(async () => {
-    const address = 'Kasmanda regent apartment'
-    const product = "amul%20fullcream"
 
+const scrapeBlinkit = async (address, product) => {
   const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
 
@@ -17,7 +15,7 @@ import puppeteer from 'puppeteer';
   await page.waitForSelector('.GetLocationModal__UseLocation-sc-jc7b49-6.GetLocationModal__SelectManually-sc-jc7b49-7');
   await page.click('.GetLocationModal__UseLocation-sc-jc7b49-6.GetLocationModal__SelectManually-sc-jc7b49-7');
 
-  // Wait for the location input, type the location
+  // Wait for the location input, type the address
   await page.waitForSelector('input[name="select-locality"]');
   await page.type('input[name="select-locality"]', address, { delay: 300 });
 
@@ -28,38 +26,31 @@ import puppeteer from 'puppeteer';
     if (firstLocationItem) firstLocationItem.click();
   });
 
+  // Open a new tab for the product search
   const newTab = await browser.newPage();
+  await newTab.goto(`https://blinkit.com/s/?q=${product}`, { waitUntil: 'networkidle2' });
 
-  // Set the address with the search query
-  await newTab.goto('https://blinkit.com/s/?q='+product, { waitUntil: 'networkidle2' });
+  // Wait for results to load
+  await newTab.waitForTimeout(3000);
+
+  // Get the list of all open pages (tabs)
+  const allPages = await browser.pages();
+
+  // Close all tabs except the last one
+  for (const page of allPages) {
+    if (page !== newTab) {
+      await page.close(); // Close the tab
+    }
+  }
+
+  // Wait for the last tab to finish any tasks (optional)
+  await newTab.waitForTimeout(5000);
+
   
-  // Wait for the animated search suggestions to appear
-  //   await newTab.waitForSelector('.SearchBar__AnimationWrapper-sc-16lps2d-1');
-  
-  // Wait for the search results to load
-  //   await newTab.waitForSelector('[data-pf="reset"]'); // Waiting for product containers to load
-  await page.waitForTimeout(3000);
-  
-  // Extract product details
-  // Extract the entire HTML of the search results section
-  const entireHTML = await newTab.evaluate(() => {
-    const resultContainer = document.querySelector('.BffSearchMobile__ResultContainer-sc-6lzqz5-4'); // Make sure this is the correct selector for the full product grid
-    return resultContainer ? resultContainer.outerHTML : '';
-  });
 
-//   console.log(entireHTML);
+  // Optional: Close the browser after reviewing
+  // await browser.close();
+};
 
-  // Open a new page to render the whole HTML content
-  const resultTab = await browser.newPage();
-
-  // Render the entire HTML content in the new tab
-  await resultTab.setContent(entireHTML);
-
-  // Wait a few seconds to view the rendered page
-  await resultTab.waitForTimeout(5000);
-
-  // issue with prices showing up in white in html
-  
-//  await browser.close();
-})();
-
+// Example usage
+scrapeBlinkit('Kasmanda regent apartment', 'amul%20fullcream');
