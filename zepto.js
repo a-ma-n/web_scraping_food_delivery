@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer';
 import fs from 'fs';
 
 export const scrapeZepto = async (address, product) => {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
 
   // Navigate to the ZeptoNow website
@@ -58,14 +58,14 @@ export const scrapeZepto = async (address, product) => {
     });
   });
 
-  fs.writeFileSync('productData.json', JSON.stringify(productData, null, 2));
+//   fs.writeFileSync('productData.json', JSON.stringify(productData, null, 2));
 
-  console.log('Product data saved to productData.json');
+//   console.log('Product data saved to productData.json');
   await browser.close();
   return productData;
 };
 
-// Running the function to view results
+// // Running the function to view results
 (async () => {
   const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
   console.log('Result:', result);
