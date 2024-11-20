@@ -1,6 +1,9 @@
 # Use the official Debian image
 FROM debian:bullseye
 
+# Set the working directory in the container for azure
+WORKDIR /home/site/wwwroot
+
 # Install required packages including Node.js and Google Chrome
 RUN apt-get update && \
     apt-get install -y \
@@ -45,7 +48,7 @@ ENV CHROME_PATH=/usr/bin/google-chrome
 RUN google-chrome --version
 
 # Set the working directory
-WORKDIR /usr/src/app
+# WORKDIR /usr/src/app
 
 # Install n, which will allow us to manage Node versions
 RUN npm install -g n
@@ -64,9 +67,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-RUN npm uninstall puppeteer
+# RUN npm uninstall puppeteer
 
-RUN npm install puppeteer@18
+# RUN npm install puppeteer@18
 
 # Copy the rest of the application code
 COPY . .

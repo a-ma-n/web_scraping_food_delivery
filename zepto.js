@@ -34,12 +34,43 @@ export const scrapeZepto = async (address, product) => {
 
   
 //   await page.screenshot({ path: 'screenshot2.png' });
-  waitForSelectorWithTimeout(page, 'button[data-testid="location-confirm-btn"]', timeout);
+const timeout = 5000; // Timeout duration in milliseconds (e.g., 5 seconds)
+
+try {
+    // Wait for either the selector or the timeout
+    await Promise.race([
+      page.waitForSelector('button[data-testid="manual-address-btn"]'),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout waiting for modal')), timeout))
+    ]);
+    
+    // Click the "Continue on web" link
+    await page.click('button[data-testid="manual-address-btn"]');
+// console.log("Clicked the 'Type manually' button");
+// await page.waitForTimeout(2000);
+
+// Enter address in the search input
+await waitForSelectorWithTimeout(page, 'input[placeholder="Search a new address"]', timeout);
+await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
+await page.waitForTimeout(2000);
+
+// Select the first address
+await waitForSelectorWithTimeout(page, 'h4.font-heading.line-clamp-1', timeout);
+await page.evaluate(() => {
+  const firstAddress = document.querySelector('h4.font-heading.line-clamp-1');
+  if (firstAddress) {
+    firstAddress.click();
+  }
+});
+  } catch (error) {
+    console.log('Modal did not appear, proceeding to next step');
+    // Proceed to next step if the modal does not appear or times out
+  }
+
   await page.waitForTimeout(2000);
   await page.waitForSelector('a[data-testid="search-bar-icon"]');
   await Promise.all([
     page.click('a[data-testid="search-bar-icon"]'),
-    page.waitForNavigation({ waitUntil: 'networkidle2' }),
+    await page.waitForTimeout(2000),
   ]);
 
   const searchComponent = await page.waitForXPath(
@@ -71,37 +102,7 @@ export const scrapeZepto = async (address, product) => {
 };
 
 
-const timeout = 5000; // Timeout duration in milliseconds (e.g., 5 seconds)
 
-// Function to wait for a selector with a timeout
-const waitForSelectorWithTimeout = async (page, selector, timeout) => {
-  try {
-    await Promise.race([
-      page.waitForSelector(selector),
-      new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout waiting for ${selector}`)), timeout))
-    ]);
-    // Handle "Type manually" button click
-await waitForSelectorWithTimeout(page, 'button[data-testid="manual-address-btn"]', timeout);
-await page.click('button[data-testid="manual-address-btn"]');
-console.log("Clicked the 'Type manually' button");
-
-// Enter address in the search input
-await waitForSelectorWithTimeout(page, 'input[placeholder="Search a new address"]', timeout);
-await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
-await page.waitForTimeout(2000);
-
-// Select the first address
-await waitForSelectorWithTimeout(page, 'h4.font-heading.line-clamp-1', timeout);
-await page.evaluate(() => {
-  const firstAddress = document.querySelector('h4.font-heading.line-clamp-1');
-  if (firstAddress) {
-    firstAddress.click();
-  }
-});
-  } catch (error) {
-    console.log(`Error or timeout while waiting for ${selector}:`, error.message);
-  }
-};
 
 
 
