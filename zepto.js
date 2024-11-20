@@ -2,16 +2,45 @@ import puppeteer from 'puppeteer';
 import fs from 'fs';
 
 export const scrapeZepto = async (address, product) => {
-  const browser = await puppeteer.launch({ headless: true });
+    const browser = await puppeteer.launch({
+        headless: "new", // or false, based on your need
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
   const page = await browser.newPage();
 
   // Navigate to the ZeptoNow website
   await page.goto('https://www.zeptonow.com');
   await page.waitForTimeout(2000);
-
+//   console.log("entered website")
+//   await page.screenshot({ path: 'screenshot.png' });
   // Click the "Type manually" button
+  
   await page.waitForSelector('button[data-testid="manual-address-btn"]');
   await page.click('button[data-testid="manual-address-btn"]');
+//   console.log("Click the Type manually button")
+
+  // Enter address
+  await page.waitForSelector('input[placeholder="Search a new address"]');
+  await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
+
+  await page.waitForTimeout(2000);
+  await page.waitForSelector('h4.font-heading.line-clamp-1');
+  await page.evaluate(() => {
+    const firstAddress = document.querySelector('h4.font-heading.line-clamp-1');
+    if (firstAddress) {
+      firstAddress.click();
+    }
+  });
+
+  await page.waitForTimeout(2000);
+  await page.waitForSelector('button[data-testid="location-confirm-btn"]');
+  await page.click('button[data-testid="location-confirm-btn"]');
+
+  
+//   await page.screenshot({ path: 'screenshot2.png' });
+  await page.waitForSelector('button[data-testid="manual-address-btn"]');
+  await page.click('button[data-testid="manual-address-btn"]');
+//   console.log("Click the Type manually button")
 
   // Enter address
   await page.waitForSelector('input[placeholder="Search a new address"]');
@@ -65,7 +94,7 @@ export const scrapeZepto = async (address, product) => {
   return productData;
 };
 
-// // Running the function to view results
+// Running the function to view results
 // (async () => {
 //   const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
 //   console.log('Result:', result);

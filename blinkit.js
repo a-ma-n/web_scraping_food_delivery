@@ -1,7 +1,10 @@
 import puppeteer, { devices } from 'puppeteer';
 
 export const scrapeBlinkit = async (address, product) => {
-  const browser = await puppeteer.launch({ headless: "new" });
+    const browser = await puppeteer.launch({
+        headless: "new", // or false, based on your need
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
   const page = await browser.newPage();
 
   // Emulate a mobile device (e.g., Moto G4)
