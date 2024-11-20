@@ -2,7 +2,7 @@ import puppeteer, { devices } from 'puppeteer';
 
 export const scrapeBlinkit = async (address, product) => {
     const browser = await puppeteer.launch({
-        headless: "new", // or false, based on your need
+        headless: false, // or false, based on your need
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
   const page = await browser.newPage();
@@ -18,8 +18,26 @@ export const scrapeBlinkit = async (address, product) => {
   await page.goto('https://www.blinkit.com', { waitUntil: 'networkidle2' });
 
   // Handle "Continue on web" modal
-  await page.waitForSelector('.DownloadAppModal__ContinueLink-sc-1wef47t-12');
+//   await page.waitForSelector('.DownloadAppModal__ContinueLink-sc-1wef47t-12');
+//   await page.click('.DownloadAppModal__ContinueLink-sc-1wef47t-12');
+
+
+  // Define the timeout duration
+const timeout = 5000; // Timeout in milliseconds (e.g., 5 seconds)
+
+try {
+  // Wait for either the selector or the timeout
+  await Promise.race([
+    page.waitForSelector('.DownloadAppModal__ContinueLink-sc-1wef47t-12'),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout waiting for modal')), timeout))
+  ]);
+  
+  // Click the "Continue on web" link
   await page.click('.DownloadAppModal__ContinueLink-sc-1wef47t-12');
+} catch (error) {
+  console.log('Modal did not appear, proceeding to next step');
+  // Proceed to next step if the modal does not appear or times out
+}
 
   // Click "Select manually" in location modal
   await page.waitForSelector('.GetLocationModal__UseLocation-sc-jc7b49-6.GetLocationModal__SelectManually-sc-jc7b49-7');

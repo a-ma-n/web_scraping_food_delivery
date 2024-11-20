@@ -3,7 +3,7 @@ import fs from 'fs';
 
 export const scrapeZepto = async (address, product) => {
     const browser = await puppeteer.launch({
-        headless: "new", // or false, based on your need
+        headless: false, // or false, based on your need
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
   const page = await browser.newPage();
@@ -18,11 +18,8 @@ export const scrapeZepto = async (address, product) => {
   await page.waitForSelector('button[data-testid="manual-address-btn"]');
   await page.click('button[data-testid="manual-address-btn"]');
 //   console.log("Click the Type manually button")
-
-  // Enter address
   await page.waitForSelector('input[placeholder="Search a new address"]');
   await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
-
   await page.waitForTimeout(2000);
   await page.waitForSelector('h4.font-heading.line-clamp-1');
   await page.evaluate(() => {
@@ -31,34 +28,13 @@ export const scrapeZepto = async (address, product) => {
       firstAddress.click();
     }
   });
-
   await page.waitForTimeout(2000);
   await page.waitForSelector('button[data-testid="location-confirm-btn"]');
   await page.click('button[data-testid="location-confirm-btn"]');
 
   
 //   await page.screenshot({ path: 'screenshot2.png' });
-//   await page.waitForSelector('button[data-testid="manual-address-btn"]');
-//   await page.click('button[data-testid="manual-address-btn"]');
-//   console.log("Click the Type manually button")
-
-  // Enter address
-  await page.waitForSelector('input[placeholder="Search a new address"]');
-  await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
-
-  await page.waitForTimeout(2000);
-  await page.waitForSelector('h4.font-heading.line-clamp-1');
-  await page.evaluate(() => {
-    const firstAddress = document.querySelector('h4.font-heading.line-clamp-1');
-    if (firstAddress) {
-      firstAddress.click();
-    }
-  });
-
-  await page.waitForTimeout(2000);
-  await page.waitForSelector('button[data-testid="location-confirm-btn"]');
-  await page.click('button[data-testid="location-confirm-btn"]');
-
+  waitForSelectorWithTimeout(page, 'button[data-testid="location-confirm-btn"]', timeout);
   await page.waitForTimeout(2000);
   await page.waitForSelector('a[data-testid="search-bar-icon"]');
   await Promise.all([
@@ -94,8 +70,43 @@ export const scrapeZepto = async (address, product) => {
   return productData;
 };
 
+
+const timeout = 5000; // Timeout duration in milliseconds (e.g., 5 seconds)
+
+// Function to wait for a selector with a timeout
+const waitForSelectorWithTimeout = async (page, selector, timeout) => {
+  try {
+    await Promise.race([
+      page.waitForSelector(selector),
+      new Promise((_, reject) => setTimeout(() => reject(new Error(`Timeout waiting for ${selector}`)), timeout))
+    ]);
+    // Handle "Type manually" button click
+await waitForSelectorWithTimeout(page, 'button[data-testid="manual-address-btn"]', timeout);
+await page.click('button[data-testid="manual-address-btn"]');
+console.log("Clicked the 'Type manually' button");
+
+// Enter address in the search input
+await waitForSelectorWithTimeout(page, 'input[placeholder="Search a new address"]', timeout);
+await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
+await page.waitForTimeout(2000);
+
+// Select the first address
+await waitForSelectorWithTimeout(page, 'h4.font-heading.line-clamp-1', timeout);
+await page.evaluate(() => {
+  const firstAddress = document.querySelector('h4.font-heading.line-clamp-1');
+  if (firstAddress) {
+    firstAddress.click();
+  }
+});
+  } catch (error) {
+    console.log(`Error or timeout while waiting for ${selector}:`, error.message);
+  }
+};
+
+
+
 // Running the function to view results
-// (async () => {
-//   const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
-//   console.log('Result:', result);
-// })();
+(async () => {
+  const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
+  console.log('Result:', result);
+})();
