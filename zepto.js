@@ -38,8 +38,8 @@ export const scrapeZepto = async (address, product) => {
 
   
 //   await page.screenshot({ path: 'screenshot2.png' });
-  await page.waitForSelector('button[data-testid="manual-address-btn"]');
-  await page.click('button[data-testid="manual-address-btn"]');
+//   await page.waitForSelector('button[data-testid="manual-address-btn"]');
+//   await page.click('button[data-testid="manual-address-btn"]');
 //   console.log("Click the Type manually button")
 
   // Enter address
