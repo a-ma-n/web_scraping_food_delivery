@@ -3,7 +3,7 @@ import fs from 'fs';
 
 export const scrapeZepto = async (address, product) => {
     const browser = await puppeteer.launch({
-        headless: false, // or false, based on your need
+        headless: "new", // or false, based on your need
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
   const page = await browser.newPage();
@@ -106,7 +106,7 @@ await page.evaluate(() => {
 
 
 // Running the function to view results
-(async () => {
-  const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
-  console.log('Result:', result);
-})();
+// (async () => {
+//   const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
+//   console.log('Result:', result);
+// })();

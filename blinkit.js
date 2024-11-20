@@ -2,7 +2,7 @@ import puppeteer, { devices } from 'puppeteer';
 
 export const scrapeBlinkit = async (address, product) => {
     const browser = await puppeteer.launch({
-        headless: false, // or false, based on your need
+        headless: "new", // or false, based on your need
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
   const page = await browser.newPage();
