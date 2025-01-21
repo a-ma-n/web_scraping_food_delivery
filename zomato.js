@@ -1,7 +1,7 @@
 import puppeteer from "puppeteer";
 import fs from "fs";
 
-export const scrapeSwiggy = async (address, dish) => {
+export const scrapeZomato = async (address, dish) => {
   const browser = await puppeteer.launch({
     headless: false, // or false, based on your need
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -66,28 +66,52 @@ export const scrapeSwiggy = async (address, dish) => {
 
   // // return Array.from(page.querySelectorAll('div[class="Search_widgetsV2__27BBR Search_widgets__3o_bA Search_widgetsFullLength__2lPs9"]')); // Adjust this selector
 
-  const productData = await page.evaluate(() => {
-    //use closest to get the parent and childeren to get the child
+  await page.waitForTimeout(5000);
 
+  const productData = await page.evaluate(() => {
+    // Select parent elements (h4 tags with height="13rem")
     const parents = Array.from(
-      document.querySelectorAll('h4[height="13rem"]') // img tag inside has img
+      document.querySelectorAll('div[height="13rem"]')
     );
 
-    let index = 0; // Ensure index starts at 0
-    return products
-      .map((product) => {
-        //   const content = product.textContent.trim().split(".");
-        //   if (content.length >= 5) { // Ensure content has enough parts
-        const pic = parents[index][1].src;
-        const title = parents[index][1].alt;
+    console.log(parents);
 
-        // can we use this val to search for the h4 having this and find that tag; its sibling will have the price
-        // const parent = closest(document.querySelectorAll('h4[innerText="'+title+'"')) // img tag inside has img
-        // childCost = parent.lastChild.span.innerText
-        index += 1;
-        return { title, price, pic };
-        //   }
-        //   return null; // Return null if content is invalid
+    return parents
+      .map((parent) => {
+        // Find the child <img> element within the parent
+        const img = parent.querySelector("img");
+        if (!img) return null; // Return null if no img is found
+
+        // Extract title and image source from the img element
+        const pic = img.src;
+        const title =
+          parent.parentElement.nextElementSibling.childNodes[0].childNodes[0]
+            .childNodes[0].innerHTML;
+
+        // const rating = parent.parentElement.nextElementSibling.childNodes[0].childNodes[0].childNodes[1].innerHTML;
+
+        //parent = document.querySelectorAll('div[height="13rem"]')
+
+        const priceParent =
+          parent.parentElement.nextElementSibling.childNodes[0].childNodes[0]
+            .childNodes[2];
+        const price =
+          priceParent.querySelector("span") != null
+            ? priceParent.querySelector("span").innerHTML
+            : "n/a";
+        const description =
+          parent.parentElement.nextElementSibling.childNodes[1].innerHTML;
+
+        // Find the sibling element that contains the price (e.g., a span inside the next element)
+        // const priceElement = parent.nextElementSibling?.querySelector("span"); // Adjust based on your HTML structure
+        // const price = priceElement ? priceElement.innerText.trim() : null;
+
+        // Return the product data, ensuring price and title are valid
+        if (title && price) {
+          return { title, price, pic, description };
+        }
+
+        return null; // Return null if data is incomplete
       })
       .filter((item) => item !== null); // Filter out null values
   });
@@ -103,13 +127,13 @@ export const scrapeSwiggy = async (address, dish) => {
   //   fs.writeFileSync('productData.json', JSON.stringify(productData, null, 2));
 
   //   console.log('Product data saved to productData.json');
-  //   await browser.close();
+  await browser.close();
   return productData;
 };
 
 // Running the function to view results
 (async () => {
-  const result = await scrapeSwiggy(
+  const result = await scrapeZomato(
     "Kasmanda Regent Apartments lucknow",
     "tunday"
   );
