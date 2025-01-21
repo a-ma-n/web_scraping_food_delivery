@@ -10,20 +10,25 @@ export const scrapeZepto = async (address, product) => {
 
   // Navigate to the ZeptoNow website
   await page.goto('https://www.zeptonow.com');
+  console.log("site opened")
   await page.waitForTimeout(2000);
 //   console.log("entered website")
 //   await page.screenshot({ path: 'screenshot.png' });
   // Click the "Type manually" button
   
-  await page.waitForSelector('button[data-testid="manual-address-btn"]');
-  await page.click('button[data-testid="manual-address-btn"]');
+  await page.waitForSelector('span[data-testid="user-address"]');
+
+  await page.click('span[data-testid="user-address"]');
+  console.log("button click")
+
 //   console.log("Click the Type manually button")
   await page.waitForSelector('input[placeholder="Search a new address"]');
   await page.type('input[placeholder="Search a new address"]', address, { delay: 100 });
-  await page.waitForTimeout(2000);
-  await page.waitForSelector('h4.font-heading.line-clamp-1');
+  await page.waitForTimeout(4000);
+  console.log("address entered")
+  await page.waitForSelector('div[data-testid="address-search-item"]');
   await page.evaluate(() => {
-    const firstAddress = document.querySelector('h4.font-heading.line-clamp-1');
+    const firstAddress = document.querySelector('div[data-testid="address-search-item"]');
     if (firstAddress) {
       firstAddress.click();
     }
@@ -107,7 +112,7 @@ await page.evaluate(() => {
 
 
 // Running the function to view results
-// (async () => {
-//   const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
-//   console.log('Result:', result);
-// })();
+(async () => {
+  const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
+  console.log('Result:', result);
+})();
