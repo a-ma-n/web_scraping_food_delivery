@@ -132,10 +132,10 @@ export const scrapeZomato = async (address, dish) => {
 };
 
 // Running the function to view results
-(async () => {
-  const result = await scrapeZomato(
-    "Kasmanda Regent Apartments lucknow",
-    "tunday"
-  );
-  console.log("Result:", result);
-})();
+// (async () => {
+//   const result = await scrapeZomato(
+//     "Kasmanda Regent Apartments lucknow",
+//     "tunday"
+//   );
+//   console.log("Result:", result);
+// })();

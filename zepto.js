@@ -112,7 +112,7 @@ await page.evaluate(() => {
 
 
 // Running the function to view results
-(async () => {
-  const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
-  console.log('Result:', result);
-})();
+// (async () => {
+//   const result = await scrapeZepto('Kasmanda Regent Apartments', 'amul fullcream');
+//   console.log('Result:', result);
+// })();
