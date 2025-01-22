@@ -1,10 +1,10 @@
 # Use the official Debian image
 FROM debian:bullseye
 
-# Set the working directory in the container for azure
+# Set the working directory in the container for Azure
 WORKDIR /home/site/wwwroot
 
-# Install required packages including Node.js and Google Chrome
+# Install required packages including Node.js, Google Chrome, and Xvfb
 RUN apt-get update && \
     apt-get install -y \
     wget \
@@ -29,7 +29,16 @@ RUN apt-get update && \
     libxfixes3 \
     libxkbcommon0 \
     libxrandr2 \
-    xdg-utils && \
+    xdg-utils \
+    xvfb \
+    libx11-xcb1 \
+    libxss1 \
+    libappindicator3-1 \
+    libnss3-dev \
+    libatk1.0-0 \
+    libnspr4-dev \
+    libdrm2 \
+    libgbm1 && \
     rm -rf /var/lib/apt/lists/* && \
     # Install Node.js (version 16.x)
     curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
@@ -47,9 +56,6 @@ ENV CHROME_PATH=/usr/bin/google-chrome
 # Verify Chrome installation and version (for debugging)
 RUN google-chrome --version
 
-# Set the working directory
-# WORKDIR /usr/src/app
-
 # Install n, which will allow us to manage Node versions
 RUN npm install -g n
 
@@ -59,7 +65,8 @@ RUN n 22
 # Install yarn globally
 RUN npm install --global yarn
 
-
+# Install Puppeteer
+RUN npm install puppeteer
 
 # Copy package.json and package-lock.json (if available)
 COPY package*.json ./
@@ -67,17 +74,16 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# RUN npm uninstall puppeteer
-
-# RUN npm install puppeteer@18
-
 # Copy the rest of the application code
 COPY . .
 
-# Expose the port your server listens on (adjust as needed)
-EXPOSE 8080
+# Set environment variable for Xvfb to use a display
+ENV DISPLAY=:99
 
+# Expose the necessary ports
+EXPOSE 8080
 EXPOSE 80
 
-# Command to run your server
-CMD ["node", "index.js"]
+# Command to start Xvfb and run the app
+CMD Xvfb :99 -screen 0 1280x1024x24 & \
+    node index.js
