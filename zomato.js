@@ -6,6 +6,9 @@ export const scrapeZomato = async (address, dish) => {
     headless: false, // or false, based on your need
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
+
+  // add code to make the string url safe
+
   const page = await browser.newPage();
 
   const website = "zomato: ";
@@ -33,7 +36,7 @@ export const scrapeZomato = async (address, dish) => {
   await page.waitForTimeout(8000);
   console.log(website, "clickin on search bar ");
 
-  await page.screenshot({ path: websiteScreenshot + "screenshot.png" });
+  await page.screenshot({ path: "screenshot.png" });
 
   await page.click(
     'input[placeholder="Search for restaurant, cuisine or a dish"]'
