@@ -8,14 +8,22 @@ export const scrapeZomato = async (address, dish) => {
   });
   const page = await browser.newPage();
 
+  const website = "zomato: ";
+  const websiteScreenshot = "zomato/";
+
+  console.log(website, "site opening");
+
   await page.goto("https://www.zomato.com");
-  console.log("site opened");
   await page.waitForTimeout(2000);
+  console.log(website, "filling address");
+
   await page.waitForSelector("input");
   await page.click("input");
+  console.log(website, "typing address");
+
   await page.type("input", address, { delay: 100 });
 
-  console.log("typed address");
+  console.log(website, "clicking on order online");
 
   await page.waitForTimeout(4000);
   await page.waitForSelector('img[alt="Order Online"]');
@@ -23,6 +31,9 @@ export const scrapeZomato = async (address, dish) => {
   await page.click('img[alt="Order Online"]');
 
   await page.waitForTimeout(8000);
+  console.log(website, "clickin on search bar ");
+
+  await page.screenshot({ path: websiteScreenshot + "screenshot.png" });
 
   await page.click(
     'input[placeholder="Search for restaurant, cuisine or a dish"]'
@@ -35,10 +46,14 @@ export const scrapeZomato = async (address, dish) => {
 
   await page.waitForTimeout(6000);
 
+  console.log(website, "clicking on the first dish");
+
   await page.click('img[alt="Dish"]');
   console.log("Searched");
 
   await page.waitForTimeout(5000);
+
+  console.log(website, "clicking on the restaurant card");
 
   await page.waitForSelector('img[alt="Restaurant Card"]');
   await page.click('img[alt="Restaurant Card"]');
@@ -46,6 +61,8 @@ export const scrapeZomato = async (address, dish) => {
   console.log("menu appeared");
 
   await page.waitForTimeout(5000);
+
+  console.log(website, "getting product data");
 
   const productData = await page.evaluate(() => {
     // Select parent elements (h4 tags with height="13rem")
@@ -86,12 +103,12 @@ export const scrapeZomato = async (address, dish) => {
   });
 
   await page.waitForTimeout(2000);
-  console.log("Extracted Product Data:", productData);
+  console.log(website, "Extracted Product Data:", productData);
 
   await page.waitForTimeout(2000);
-  console.log(productData);
+  console.log(website, productData);
 
-  console.log("data", productData);
+  console.log(website, "data", productData);
 
   await browser.close();
   return productData;

@@ -14,6 +14,8 @@ export const scrapeBlinkit = async (address, product) => {
   // URL encode the product name
   product = encodeURIComponent(product);
 
+  const website = "blinkit: ";
+  console.log(website, "opening site");
   // Navigate to Blinkit's website
   await page.goto("https://www.blinkit.com", { waitUntil: "networkidle2" });
 
@@ -43,6 +45,7 @@ export const scrapeBlinkit = async (address, product) => {
     // Proceed to next step if the modal does not appear or times out
   }
 
+  console.log(website, "selecting location");
   // Click "Select manually" in location modal
   await page.waitForSelector(
     ".GetLocationModal__UseLocation-sc-jc7b49-6.GetLocationModal__SelectManually-sc-jc7b49-7"
@@ -51,14 +54,20 @@ export const scrapeBlinkit = async (address, product) => {
     ".GetLocationModal__UseLocation-sc-jc7b49-6.GetLocationModal__SelectManually-sc-jc7b49-7"
   );
 
+  console.log(website, "entering address");
   // Enter the address in location search
   await page.waitForSelector('input[name="select-locality"]');
   await page.type('input[name="select-locality"]', address, { delay: 300 });
+
+  console.log(website, "selecting location");
 
   // Select the first location from suggestions
   await page.waitForSelector(
     ".LocationSearchList__LocationListContainer-sc-93rfr7-0"
   );
+
+  console.log(website, " clicking on location");
+
   await page.evaluate(() => {
     const firstLocationItem = document.querySelector(
       ".LocationSearchList__LocationListContainer-sc-93rfr7-0"
@@ -66,12 +75,15 @@ export const scrapeBlinkit = async (address, product) => {
     if (firstLocationItem) firstLocationItem.click();
   });
 
+  console.log(website, "searching");
+
   // Open a new tab for the product search
   const newTab = await browser.newPage();
   await newTab.goto(`https://blinkit.com/s/?q=${product}`, {
     waitUntil: "networkidle2",
   });
 
+  console.log(website, "gathering product details");
   // Extract product details
   const productDetails = await newTab.evaluate(() => {
     const products = Array.from(

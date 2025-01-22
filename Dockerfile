@@ -4,7 +4,7 @@ FROM debian:bullseye
 # Set the working directory in the container for Azure
 WORKDIR /home/site/wwwroot
 
-# Install required packages including Node.js, Google Chrome, and Xvfb
+# Install required packages including Node.js, Google Chrome, Xvfb, and x11vnc
 RUN apt-get update && \
     apt-get install -y \
     wget \
@@ -38,7 +38,8 @@ RUN apt-get update && \
     libatk1.0-0 \
     libnspr4-dev \
     libdrm2 \
-    libgbm1 && \
+    libgbm1 \
+    x11vnc && \
     rm -rf /var/lib/apt/lists/* && \
     # Install Node.js (version 16.x)
     curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
@@ -83,7 +84,9 @@ ENV DISPLAY=:99
 # Expose the necessary ports
 EXPOSE 8080
 EXPOSE 80
+EXPOSE 5900  
 
-# Command to start Xvfb and run the app
+# Command to start Xvfb, X11VNC, and run the app
 CMD Xvfb :99 -screen 0 1280x1024x24 & \
+    x11vnc -display :99 -forever -nopw -rfbport 5900 & \
     node index.js
