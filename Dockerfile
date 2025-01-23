@@ -75,9 +75,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-RUN npm uninstall puppeteer
+# RUN npm uninstall puppeteer
 
-RUN npm install puppeteer@18
+# RUN npm install puppeteer@18
 
 # Copy the rest of the application code
 COPY . .
