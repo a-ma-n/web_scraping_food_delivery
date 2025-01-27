@@ -1,131 +1,111 @@
 import puppeteer from "puppeteer";
-import fs from "fs";
 
 export const scrapeSwiggy = async (address, dish) => {
-  const browser = await puppeteer.launch({
-    headless: false, // or false, based on your need
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  const website = "swiggy: ";
-  const websiteScreenshot = "swiggy/";
-  const page = await browser.newPage();
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: false,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const website = "swiggy: ";
+    const page = await browser.newPage();
 
-  await page.goto("https://www.swiggy.com");
-  console.log(website, "site opened");
-  await page.waitForTimeout(2000);
-  console.log(website, "entering delivery location");
-  await page.waitForSelector(
-    'input[placeholder="Enter your delivery location"]'
-  );
-  await page.click('input[placeholder="Enter your delivery location"]');
-  //   await page.click('input[placeholder="Enter your delivery location"]');
+    await page.goto("https://www.swiggy.com");
+    console.log(website, "site opened");
+    await page.waitForTimeout(2000);
 
-  console.log(website, "typing address");
-  await page.type(
-    'input[placeholder="Enter your delivery location"]',
-    address,
-    { delay: 100 }
-  );
-
-  console.log(website, "typed address");
-
-  //   await page.evaluate(() => {
-  //     const firstAddress = document.querySelector('span[class="_2OORn"]');
-  //     console.log("address:"+firstAddress)
-  //     if (firstAddress) {
-  //       firstAddress.click();
-  //     }
-  //   });
-  await page.waitForTimeout(2000);
-  console.log(website, " clickin on the 1st address");
-  await page.click('span[class="_2OORn"]');
-  await page.waitForTimeout(3000);
-
-  console.log(website, "open new search page ");
-  await page.goto("https://www.swiggy.com/search?query=" + dish);
-  await page.waitForTimeout(5000);
-
-  await page.waitForSelector('span[data-testid="DISH-nav-tab-pl"]');
-
-  await page.screenshot({ path: "screenshot.png" });
-
-  console.log(website, "dish appeared");
-  await page.click('span[data-testid="DISH-nav-tab-pl"]');
-
-  console.log(website, "clicked on dish");
-
-  await page.waitForTimeout(10000);
-  //   await page.waitForSelector('div[class="_3orhj _3-C0H"]');
-  console.log(website, "reading pg data");
-
-  // return Array.from(page.querySelectorAll('div[class="Search_widgetsV2__27BBR Search_widgets__3o_bA Search_widgetsFullLength__2lPs9"]')); // Adjust this selector
-
-  const productData = await page.evaluate(() => {
-    const products = Array.from(
-      document.querySelectorAll(
-        'p[class="ScreenReaderOnly_screenReaderOnly___ww-V"]'
-      )
+    console.log(website, "entering delivery location");
+    await page.waitForSelector(
+      'input[placeholder="Enter your delivery location"]'
     );
-    const images = Array.from(
-      document.querySelectorAll('img[class="styles_itemImage__DHHqs"]')
+    await page.click('input[placeholder="Enter your delivery location"]');
+
+    console.log(website, "typing address");
+    await page.type(
+      'input[placeholder="Enter your delivery location"]',
+      address,
+      { delay: 100 }
     );
 
-    console.log(" product Data:", products);
-    console.log(" image Data:", images);
+    console.log(website, "typed address");
+    await page.waitForTimeout(2000);
 
-    const dishes = Array.from(
-      document.querySelectorAll('div[data-testid="normal-dish-item"]')
-    );
+    console.log(website, "clicking on the 1st address");
+    await page.click('span[class="_2OORn"]');
+    await page.waitForTimeout(3000);
 
-    let index = 0;
-    return dishes
-      .map((dish) => {
-        const title =
-          dish?.childNodes[0].childNodes[1].childNodes[1].textContent;
-        const price = dish?.childNodes[0].childNodes[1].childNodes[2].innerText;
-        const pic = images[index]?.src;
-        index += 1;
-        return { title, price, pic };
-        // const description = dishes[index].childNodes[0].childNodes[1].childNodes[2].innerText;
-      })
-      .filter((item) => item !== null); // Filter out null values
+    console.log(website, "open new search page");
+    await page.goto("https://www.swiggy.com/search?query=" + dish);
+    await page.waitForTimeout(5000);
 
-    // let index = 0; // Ensure index starts at 0
-    // return products
-    //   .map((product) => {
-    //     const content = product.textContent.trim().split(".");
-    //     // if (content.length >= 5) {
-    //     // Ensure content has enough parts
-    //     const title = content[1] || "No title";
-    //     const pic = images[index]?.src || "No image"; // Use optional chaining
-    //     const price = content[3] || "No price";
-    //     const description = content[4] || "No description";
+    await page.waitForSelector('span[data-testid="DISH-nav-tab-pl"]');
+    console.log(website, "dish appeared");
+    await page.click('span[data-testid="DISH-nav-tab-pl"]');
 
-    //     index += 1;
-    //     return { title, description, price, pic, product };
-    //     // }
-    //     // return null; // Return null if content is invalid
-    //   })
-    //   .filter((item) => item !== null); // Filter out null values
-  });
+    console.log(website, "clicked on dish");
+    await page.waitForTimeout(10000);
 
-  await page.waitForTimeout(2000);
-  // console.log(website, "Extracted Product Data:", productData);
+    console.log(website, "reading pg data");
+    const productData = await page.evaluate(() => {
+      const dishes = Array.from(
+        document.querySelectorAll('div[data-testid="normal-dish-item"]')
+      );
+      const images = Array.from(
+        document.querySelectorAll('img[class="styles_itemImage__DHHqs"]')
+      );
 
-  await page.waitForTimeout(2000);
-  // console.log(website, productData);
+      let index = 0;
+      return dishes
+        .map((dish) => {
+          try {
+            const title =
+              dish?.childNodes[0].childNodes[1].childNodes[1].textContent;
+            const price =
+              dish?.childNodes[0].childNodes[1].childNodes[2].innerText;
+            const pic = images[index]?.src;
+            index += 1;
+            return { title, price, pic };
+          } catch (e) {
+            console.error("Error processing dish:", e);
+            return null;
+          }
+        })
+        .filter((item) => item !== null);
+    });
 
-  // console.log(website, "data", productData);
-
-  //   fs.writeFileSync('productData.json', JSON.stringify(productData, null, 2));
-
-  //   console.log('Product data saved to productData.json');
-  await browser.close();
-  return productData;
+    await browser.close();
+    return { data: productData };
+  } catch (error) {
+    let screenshot = null;
+    if (browser) {
+      try {
+        const pages = await browser.pages();
+        if (pages.length > 0) {
+          screenshot = await pages[0].screenshot({
+            encoding: "base64",
+            fullPage: true,
+          });
+        }
+      } catch (screenshotError) {
+        console.error("Failed to capture screenshot:", screenshotError);
+      } finally {
+        await browser.close();
+      }
+    }
+    return {
+      error: error.message,
+      screenshot,
+      stack: error.stack,
+    };
+  }
 };
 
-// Running the function to view results
-// (async () => {
-//   const result = await scrapeSwiggy("Kasmanda Regent Apartments", "tunday");
-//   console.log("Result:", result);
-// })();
+(async () => {
+  const result = await scrapeSwiggy("Kasmanda Regent Apartments", "tunday");
+  if (result.data) {
+    console.log("Success:", result.data);
+  } else {
+    console.error("Error:", result.error);
+    console.log("Screenshot available:", !!result.screenshot);
+  }
+})();
