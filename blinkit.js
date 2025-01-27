@@ -1,114 +1,117 @@
 import puppeteer, { devices } from "puppeteer";
 
 export const scrapeBlinkit = async (address, product) => {
-  const browser = await puppeteer.launch({
-    headless: false, // or false, based on your need
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  const page = await browser.newPage();
-
-  // Emulate a mobile device (e.g., Moto G4)
-  const motoG4 = devices["Moto G4"];
-  await page.emulate(motoG4);
-
-  // URL encode the product name
-  product = encodeURIComponent(product);
-
-  const website = "blinkit: ";
-  console.log(website, "opening site");
-  // Navigate to Blinkit's website
-  await page.goto("https://www.blinkit.com", { waitUntil: "networkidle2" });
-
-  // Handle "Continue on web" modal
-  //   await page.waitForSelector('.DownloadAppModal__ContinueLink-sc-1wef47t-12');
-  //   await page.click('.DownloadAppModal__ContinueLink-sc-1wef47t-12');
-
-  // Define the timeout duration
-  const timeout = 5000; // Timeout in milliseconds (e.g., 5 seconds)
-
+  let browser;
   try {
-    // Wait for either the selector or the timeout
-    await Promise.race([
-      page.waitForSelector(".DownloadAppModal__ContinueLink-sc-1wef47t-12"),
-      new Promise((_, reject) =>
-        setTimeout(
-          () => reject(new Error("Timeout waiting for modal")),
-          timeout
-        )
-      ),
-    ]);
+    browser = await puppeteer.launch({
+      headless: false,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    const motoG4 = devices["Moto G4"];
+    await page.emulate(motoG4);
 
-    // Click the "Continue on web" link
-    await page.click(".DownloadAppModal__ContinueLink-sc-1wef47t-12");
-  } catch (error) {
-    console.log("Modal did not appear, proceeding to next step");
-    // Proceed to next step if the modal does not appear or times out
-  }
+    product = encodeURIComponent(product);
+    const website = "blinkit: ";
 
-  console.log(website, "selecting location");
-  // Click "Select manually" in location modal
-  await page.waitForSelector(
-    ".GetLocationModal__UseLocation-sc-jc7b49-6.GetLocationModal__SelectManually-sc-jc7b49-7"
-  );
-  await page.click(
-    ".GetLocationModal__UseLocation-sc-jc7b49-6.GetLocationModal__SelectManually-sc-jc7b49-7"
-  );
+    // Navigation and interaction logic
+    console.log(website, "opening site");
+    await page.goto("https://www.blinkit.com", { waitUntil: "networkidle2" });
 
-  console.log(website, "entering address");
-  // Enter the address in location search
-  await page.waitForSelector('input[name="select-locality"]');
-  await page.type('input[name="select-locality"]', address, { delay: 300 });
+    // Handle potential modal
+    try {
+      await Promise.race([
+        page.waitForSelector(".DownloadAppModal__ContinueLink-sc-1wef47t-12", {
+          timeout: 5000,
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Modal timeout")), 5000)
+        ),
+      ]);
+      await page.click(".DownloadAppModal__ContinueLink-sc-1wef47t-12");
+    } catch (modalError) {
+      console.log("Modal handling skipped:", modalError.message);
+    }
 
-  console.log(website, "selecting location");
+    console.log(website, "selecting location");
+    await page.waitForSelector(".GetLocationModal__SelectManually-sc-jc7b49-7");
+    await page.click(".GetLocationModal__SelectManually-sc-jc7b49-7");
 
-  // Select the first location from suggestions
-  await page.waitForSelector(
-    ".LocationSearchList__LocationListContainer-sc-93rfr7-0"
-  );
+    console.log(website, "entering address");
+    await page.waitForSelector('input[name="select-locality"]');
+    await page.type('input[name="select-locality"]', address, { delay: 300 });
 
-  console.log(website, " clicking on location");
-
-  await page.evaluate(() => {
-    const firstLocationItem = document.querySelector(
+    console.log(website, "selecting location");
+    await page.waitForSelector(
       ".LocationSearchList__LocationListContainer-sc-93rfr7-0"
     );
-    if (firstLocationItem) firstLocationItem.click();
-  });
+    await page.evaluate(() => {
+      document
+        .querySelector(".LocationSearchList__LocationListContainer-sc-93rfr7-0")
+        ?.click();
+    });
 
-  console.log(website, "searching");
+    console.log(website, "searching");
+    const newTab = await browser.newPage();
+    await newTab.goto(`https://blinkit.com/s/?q=${product}`, {
+      waitUntil: "networkidle2",
+    });
 
-  // Open a new tab for the product search
-  const newTab = await browser.newPage();
-  await newTab.goto(`https://blinkit.com/s/?q=${product}`, {
-    waitUntil: "networkidle2",
-  });
+    console.log(website, "gathering product details");
+    const productDetails = await newTab.evaluate(() => {
+      return Array.from(
+        document.querySelectorAll('div[role="button"][id]')
+      ).map((product) => ({
+        title: product
+          .querySelector("div.tw-text-300.tw-font-semibold")
+          ?.textContent.trim(),
+        quantity: product
+          .querySelector("div.tw-text-200.tw-font-medium")
+          ?.textContent.trim(),
+        price: product
+          .querySelector("div.tw-text-200.tw-font-semibold")
+          ?.textContent.trim(),
+        pic: product.querySelector("img.tw-h-full.tw-w-full")?.src,
+      }));
+    });
 
-  console.log(website, "gathering product details");
-  // Extract product details
-  const productDetails = await newTab.evaluate(() => {
-    const products = Array.from(
-      document.querySelectorAll('div[role="button"][id]')
-    );
-    return products.map((product) => ({
-      title: product
-        .querySelector("div.tw-text-300.tw-font-semibold")
-        ?.textContent.trim(),
-      quantity: product
-        .querySelector("div.tw-text-200.tw-font-medium")
-        ?.textContent.trim(),
-      price: product
-        .querySelector("div.tw-text-200.tw-font-semibold")
-        ?.textContent.trim(),
-      pic: product.querySelector("img.tw-h-full.tw-w-full")?.src,
-    }));
-  });
-
-  await browser.close();
-  return productDetails;
+    await browser.close();
+    return { data: productDetails };
+  } catch (error) {
+    let screenshot = null;
+    if (browser) {
+      try {
+        const pages = await browser.pages();
+        if (pages.length > 0) {
+          screenshot = await pages[0].screenshot({
+            encoding: "base64",
+            fullPage: true,
+          });
+        }
+      } catch (screenshotError) {
+        console.error("Failed to capture screenshot:", screenshotError);
+      } finally {
+        await browser.close();
+      }
+    }
+    return {
+      error: error.message,
+      screenshot,
+      stack: error.stack,
+    };
+  }
 };
 
 // Test the function
-// (async () => {
-//   const result = await scrapeBlinkit('Kasmanda Regent Apartments', 'amul fullcream');
-//   console.log('Result:', result);
-// })();
+(async () => {
+  const result = await scrapeBlinkit(
+    "Kasmanda Regent Apartments",
+    "amul fullcream"
+  );
+  if (result.data) {
+    console.log("Success:", result.data);
+  } else {
+    console.error("Error:", result.error);
+    console.log("Screenshot (base64):", result.screenshot);
+  }
+})();
