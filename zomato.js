@@ -1,127 +1,121 @@
 import puppeteer from "puppeteer";
-import fs from "fs";
 
 export const scrapeZomato = async (address, dish) => {
-  const browser = await puppeteer.launch({
-    headless: false, // or false, based on your need
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
+  let browser;
+  try {
+    browser = await puppeteer.launch({
+      headless: false,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    const website = "zomato: ";
 
-  // add code to make the string url safe
+    console.log(website, "site opening");
+    await page.goto("https://www.zomato.com", { waitUntil: "networkidle2" });
 
-  const page = await browser.newPage();
+    console.log(website, "filling address");
+    await page.waitForSelector("input");
+    await page.click("input");
 
-  const website = "zomato: ";
-  const websiteScreenshot = "zomato/";
+    console.log(website, "typing address");
+    await page.type("input", address, { delay: 100 });
 
-  console.log(website, "site opening");
+    console.log(website, "clicking on order online");
+    await page.waitForSelector('img[alt="Order Online"]', { timeout: 10000 });
+    await page.click('img[alt="Order Online"]');
 
-  await page.goto("https://www.zomato.com");
-  await page.waitForTimeout(2000);
-  console.log(website, "filling address");
-
-  await page.waitForSelector("input");
-  await page.click("input");
-  console.log(website, "typing address");
-
-  await page.type("input", address, { delay: 100 });
-
-  console.log(website, "clicking on order online");
-
-  await page.waitForTimeout(4000);
-  await page.waitForSelector('img[alt="Order Online"]');
-  await page.click('img[alt="Order Online"]');
-  await page.click('img[alt="Order Online"]');
-
-  await page.waitForTimeout(8000);
-  console.log(website, "clickin on search bar ");
-
-  await page.screenshot({ path: "screenshot.png" });
-
-  await page.click(
-    'input[placeholder="Search for restaurant, cuisine or a dish"]'
-  );
-  await page.type(
-    'input[placeholder="Search for restaurant, cuisine or a dish"]',
-    dish,
-    { delay: 100 }
-  );
-
-  await page.waitForTimeout(6000);
-
-  console.log(website, "clicking on the first dish");
-
-  await page.click('img[alt="Dish"]');
-  console.log("Searched");
-
-  await page.waitForTimeout(5000);
-
-  console.log(website, "clicking on the restaurant card");
-
-  await page.waitForSelector('img[alt="Restaurant Card"]');
-  await page.click('img[alt="Restaurant Card"]');
-
-  console.log("menu appeared");
-
-  await page.waitForTimeout(5000);
-
-  console.log(website, "getting product data");
-
-  const productData = await page.evaluate(() => {
-    // Select parent elements (h4 tags with height="13rem")
-    const parents = Array.from(
-      document.querySelectorAll('div[height="13rem"]')
+    console.log(website, "clicking on search bar");
+    await page.waitForSelector(
+      'input[placeholder="Search for restaurant, cuisine or a dish"]',
+      { timeout: 15000 }
+    );
+    await page.click(
+      'input[placeholder="Search for restaurant, cuisine or a dish"]'
+    );
+    await page.type(
+      'input[placeholder="Search for restaurant, cuisine or a dish"]',
+      dish,
+      { delay: 100 }
     );
 
-    console.log(parents);
+    console.log(website, "clicking on the first dish");
+    await page.waitForSelector('img[alt="Dish"]', { timeout: 10000 });
+    await page.click('img[alt="Dish"]');
 
-    return parents
-      .map((parent) => {
-        // Find the child <img> element within the parent
-        const img = parent.querySelector("img");
-        if (!img) return null; // Return null if no img is found
+    console.log(website, "clicking on the restaurant card");
+    await page.waitForSelector('img[alt="Restaurant Card"]', {
+      timeout: 10000,
+    });
+    await page.click('img[alt="Restaurant Card"]');
 
-        const pic = img.src;
-        const title =
-          parent.parentElement.nextElementSibling.childNodes[0].childNodes[0]
-            .childNodes[0].innerHTML;
+    console.log(website, "getting product data");
+    const productData = await page.evaluate(() => {
+      try {
+        return Array.from(document.querySelectorAll('div[height="13rem"]'))
+          .map((parent) => {
+            const img = parent.querySelector("img");
+            if (!img) return null;
 
-        const priceParent =
-          parent.parentElement.nextElementSibling.childNodes[0].childNodes[0]
-            .childNodes[2];
-        const price =
-          priceParent.querySelector("span") != null
-            ? priceParent.querySelector("span").innerHTML
-            : "n/a";
-        const description =
-          parent.parentElement.nextElementSibling.childNodes[1].innerHTML;
+            const titleElement =
+              parent.parentElement.nextElementSibling?.childNodes[0]
+                ?.childNodes[0]?.childNodes[0];
+            const priceElement =
+              parent.parentElement.nextElementSibling?.childNodes[0]
+                ?.childNodes[0]?.childNodes[2];
+            const descElement =
+              parent.parentElement.nextElementSibling?.childNodes[1];
 
-        if (title && price) {
-          return { title, price, pic, description };
+            return {
+              title: titleElement?.innerHTML?.trim(),
+              price:
+                priceElement?.querySelector("span")?.innerHTML?.trim() || "n/a",
+              pic: img.src,
+              description: descElement?.innerHTML?.trim(),
+            };
+          })
+          .filter((item) => item && item.title && item.price);
+      } catch (e) {
+        console.error("Evaluation error:", e);
+        return [];
+      }
+    });
+
+    await browser.close();
+    return { data: productData };
+  } catch (error) {
+    let screenshot = null;
+    if (browser) {
+      try {
+        const pages = await browser.pages();
+        if (pages.length > 0) {
+          screenshot = await pages[0].screenshot({
+            encoding: "base64",
+            fullPage: true,
+          });
         }
-
-        return null; // Return null if data is incomplete
-      })
-      .filter((item) => item !== null); // Filter out null values
-  });
-
-  await page.waitForTimeout(2000);
-  console.log(website, "Extracted Product Data:", productData);
-
-  await page.waitForTimeout(2000);
-  console.log(website, productData);
-
-  console.log(website, "data", productData);
-
-  await browser.close();
-  return productData;
+      } catch (screenshotError) {
+        console.error("Failed to capture screenshot:", screenshotError);
+      } finally {
+        await browser.close();
+      }
+    }
+    return {
+      error: error.message,
+      screenshot,
+      stack: error.stack,
+    };
+  }
 };
 
-// Running the function to view results
-// (async () => {
-//   const result = await scrapeZomato(
-//     "Kasmanda Regent Apartments lucknow",
-//     "tunday"
-//   );
-//   console.log("Result:", result);
-// })();
+(async () => {
+  const result = await scrapeZomato(
+    "Kasmanda Regent Apartments lucknow",
+    "tunday"
+  );
+  if (result.data) {
+    console.log("Success:", result.data);
+  } else {
+    console.error("Error:", result.error);
+    console.log("Screenshot available:", !!result.screenshot);
+  }
+})();
