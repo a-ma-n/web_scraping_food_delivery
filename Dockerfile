@@ -39,7 +39,7 @@ RUN apt-get update && \
     libnspr4-dev \
     libdrm2 \
     libgbm1 \
-    x11vnc && \
+    # x11vnc && \
     rm -rf /var/lib/apt/lists/* && \
     # Install Node.js (version 16.x)
     curl -sL https://deb.nodesource.com/setup_16.x | bash - && \
@@ -92,5 +92,5 @@ EXPOSE 5900
 
 # Command to start Xvfb, X11VNC, and run the app
 CMD Xvfb :99 -screen 0 1280x1024x24 & \
-    x11vnc -display :99 -forever -nopw -rfbport 5900 & \
+    # x11vnc -display :99 -forever -nopw -rfbport 5900 & \
     node index.js
